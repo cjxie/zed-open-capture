@@ -229,6 +229,7 @@ public:
     inline void setStartTimestamp(uint64_t start_ts){mStartSysTs=start_ts;}        //!< Called by  VideoCapture to sync timestamps reference point
     inline void setVideoPtr(video::VideoCapture* videoPtr){mVideoPtr=videoPtr;}    //!< Called by  VideoCapture to set the pointer to it
 #endif
+    void close();                       //!< Close the USB connection
 
 private:
     static bool searchForConnectedDev(int* serial_number, unsigned short* found_pid); //!< Search for a device and returns its pid and serial number
@@ -238,7 +239,7 @@ private:
     bool startCapture();                //!< Start data capture thread
 
     bool open(uint16_t pid, int serial_number); //!< Open the USB connection
-    void close();                       //!< Close the USB connection
+    
 
     int enumerateDevices();             //!< Populates the  mSlDevPid map with serial number and PID of the available devices
 

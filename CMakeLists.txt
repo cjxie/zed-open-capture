@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.5)
 
 set(PROJECT_NAME zed_open_capture)
 
@@ -135,7 +135,9 @@ if(BUILD_VIDEO)
 
 endif()
 
-add_library(${PROJECT_NAME} SHARED ${SRC_FULL} )
+set(HDR_FULL ${HDR_FULL} 
+    ${PROJECT_SOURCE_DIR}/examples/include/ocv_display.hpp)
+add_library(${PROJECT_NAME} SHARED ${SRC_FULL} ${HDR_FULL})
 target_link_libraries( ${PROJECT_NAME}  ${DEP_LIBS})
 
 ############################################################################
@@ -143,11 +145,42 @@ target_link_libraries( ${PROJECT_NAME}  ${DEP_LIBS})
 set_target_properties(${PROJECT_NAME} PROPERTIES
     PUBLIC_HEADER "${HDR_FULL}"
 )
+
+install(FILES ${HDR_FULL}
+        DESTINATION include)
 install(TARGETS ${PROJECT_NAME}
+        EXPORT ${PROJECT_NAME}
     LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+    INCLUDES DESTINATION include
     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include/zed-open-capture)
 
+############################################################################
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(cv_bridge REQUIRED)
 
+
+add_executable(rosDataCollector src/rosDataCollector.cpp)
+target_link_libraries(rosDataCollector
+                        ${PROJECT_NAME}
+                        ${OpenCV_LIBS})
+target_include_directories(rosDataCollector PUBLIC
+                        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/zed_ros2>
+                        $<INSTALL_INTERFACE:include>)      
+                        
+ament_target_dependencies(
+    rosDataCollector
+    rclcpp
+    std_msgs
+    sensor_msgs
+    cv_bridge
+    OpenCV
+    )
+    
+install(TARGETS rosDataCollector
+        DESTINATION lib/${PROJECT_NAME})                    
 ############################################################################
 # Generate examples
 if(BUILD_EXAMPLES)
@@ -170,6 +203,28 @@ if(BUILD_EXAMPLES)
         install(TARGETS ${VIDEO_EXAMPLE}
             RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
         )
+
+        #### rosbag recorder
+        # find dependencies
+        # find_package(ament_cmake REQUIRED)
+        # find_package(rclcpp REQUIRED)
+        # find_package(std_msgs REQUIRED)
+        # find_package(sensor_msgs REQUIRED)
+        # find_package(cv_bridge REQUIRED)
+        # find_package(OpenCV REQUIRED)
+
+        # add_executable(rosDataCollector "${PROJECT_SOURCE_DIR}/src/rosDataCollector.cpp")
+        # target_link_libraries(rosDataCollector
+        #                 ${PROJECT_NAME}
+        #                 ${OpenCV_LIBS})
+        # ament_target_dependencies(rosDataCollector 
+        #         "rclcpp" 
+        #         "std_msgs" 
+        #         "sensor_msgs"
+        #         "cv_bridge"
+        #         "OpenCV")
+        # install(TARGETS rosDataCollector
+        #         RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
 
         ##### Multi-camera Video Example
         set(MULTICAM_VIDEO_EXAMPLE ${PROJECT_NAME}_multicam_video_example)
@@ -291,3 +346,6 @@ if(BUILD_EXAMPLES)
         )
     endif()
 endif()
+
+
+ament_package()
