@@ -27,6 +27,11 @@
 #include <fstream>      // std::ofstream
 #include <iomanip>
 
+#define EXP_RAW_MAX_15FPS   1550
+#define EXP_RAW_MAX_30FPS   1100
+#define EXP_RAW_MAX_60FPS   880
+#define EXP_RAW_MAX_100FPS  720
+
 #define LOG_SEP ","
 
 #ifdef VIDEO_MOD_AVAILABLE
@@ -103,6 +108,19 @@ public:
      * \param height the frame height
      */
     inline void getFrameSize( int& width, int& height ){width=mWidth;height=mHeight;}
+
+    inline void setFps(int fps)
+    {
+        mFps = fps;
+        if( mFps <= 15 )
+            mExpoureRawMax = EXP_RAW_MAX_15FPS;
+        else if( mFps <= 30 )
+            mExpoureRawMax = EXP_RAW_MAX_30FPS;
+        else if( mFps <= 60 )
+            mExpoureRawMax = EXP_RAW_MAX_60FPS;
+        else
+            mExpoureRawMax = EXP_RAW_MAX_100FPS;
+    }
 
     // ----> Led Control
     /*!

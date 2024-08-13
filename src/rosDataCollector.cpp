@@ -30,9 +30,26 @@ class imuImagePublisher : public rclcpp::Node
 public:
     imuImagePublisher(sl_oc::video::VideoParams &params): Node("imu_image_publisher"), cap_(params), sens_(sl_oc::VERBOSITY::ERROR), last_ts_imu(0)
     {
-        
-        // sl_oc::video::VideoCapture cap(params);
-        // cap_.initializeVideo();
+        this->declare_parameter("fps", 30);
+        int value = this->get_parameter("fps").as_int();
+
+        if (value <=15)
+        {
+            cap_.setFps(15);
+        }
+        else if(value <= 30)
+        {
+            cap_.setFps(30);
+        }
+        else if(value <= 60)
+        {
+            cap_.setFps(60);
+        }
+        else
+        {
+            cap_.setFps(60);
+        }
+
         if(!cap_.initializeVideo(-1))
         {
             RCLCPP_ERROR(this->get_logger(),  "Cannot open camera video capture");
@@ -81,7 +98,7 @@ public:
                 RCLCPP_INFO(this->get_logger(), "Invalid imu timestamp");
                 continue;
             }
-            RCLCPP_INFO(this->get_logger(), "imu ts: %f", ts / 1e9);
+            // RCLCPP_INFO(this->get_logger(), "imu ts: %f", ts / 1e9);
             auto imu_msg = std::make_unique<sensor_msgs::msg::Imu>();
             imu_msg->header.stamp = ts_imu;
             // imu_msg->orientation.x = imu_data.
@@ -111,7 +128,7 @@ public:
         while(1 && frame.data!=nullptr)
         {
             frame = cap_.getLastFrame(1);
-            RCLCPP_INFO(this->get_logger(), "imageThread1");
+            // RCLCPP_INFO(this->get_logger(), "imageThread1");
             if(frame.data!=nullptr && frame.timestamp !=last_ts)
             {
                 cv::Mat frameYUV = cv::Mat(frame.height, frame.width, CV_8UC2, frame.data);
@@ -127,7 +144,7 @@ public:
                     
                     frame_fps = 1e9/static_cast<double>(frame.timestamp - last_ts);
                     RCLCPP_INFO(this->get_logger(), "fps : %f", frame_fps);
-                    RCLCPP_INFO(this->get_logger(), "TimeStamp: %f", static_cast<double> (frame.timestamp) / 1e9);
+                    // RCLCPP_INFO(this->get_logger(), "TimeStamp: %f", static_cast<double> (frame.timestamp) / 1e9);
                     
                     
                     rclcpp::Time ts(frame.timestamp);
@@ -148,7 +165,7 @@ public:
                     }
                 }
             }  
-            RCLCPP_INFO(this->get_logger(), "TimeStamp: %f", static_cast<double> (last_ts) / 1e9);
+            // RCLCPP_INFO(this->get_logger(), "TimeStamp: %f", static_cast<double> (last_ts) / 1e9);
             last_ts = frame.timestamp;    
         }
         
