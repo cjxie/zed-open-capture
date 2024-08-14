@@ -89,23 +89,29 @@ public:
     {
         while(!sensThreadStop)
         {
-            const sl_oc::sensors::data::Imu imu_data = sens_.getLastIMUData(5000);
+            const sl_oc::sensors::data::Imu imu_data = sens_.getLastIMUData(100000);
             uint64_t ts =  imu_data.timestamp;
             rclcpp::Time ts_imu(ts);
-            if(ts_imu.nanoseconds() < last_ts_imu.nanoseconds())
+            if(ts < last_ts_imu)
             {
-                last_ts_imu = ts_imu;
+                last_ts_imu = ts;
                 RCLCPP_INFO(this->get_logger(), "Invalid imu timestamp");
                 continue;
             }
+        
             // RCLCPP_INFO(this->get_logger(), "imu ts: %f", ts / 1e9);
+            double fps = 1e9 / static_cast<double>(ts - last_ts_imu);
+            RCLCPP_INFO(this->get_logger(), "imu fps: %f", fps);
+
+
+            last_ts_imu = ts;
             auto imu_msg = std::make_unique<sensor_msgs::msg::Imu>();
             imu_msg->header.stamp = ts_imu;
             // imu_msg->orientation.x = imu_data.
             
             imu_msg->angular_velocity.x = imu_data.gX * DEG2RAD;
-            imu_msg->angular_velocity.y = imu_data.gX * DEG2RAD;
-            imu_msg->angular_velocity.z = imu_data.gX * DEG2RAD;
+            imu_msg->angular_velocity.y = imu_data.gY * DEG2RAD;
+            imu_msg->angular_velocity.z = imu_data.gZ * DEG2RAD;
 
             imu_msg->linear_acceleration.x = imu_data.aX;
             imu_msg->linear_acceleration.y = imu_data.aY;
@@ -186,7 +192,7 @@ private:
     rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr imageL_publisher_;
     rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr imageR_publisher_;
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_publisher_;
-    rclcpp::Time last_ts_imu;
+    uint64_t last_ts_imu;
 };
 
 
