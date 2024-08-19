@@ -4267,6 +4267,11 @@ bool initCalibration(std::string calibration_file, cv::Size2i image_size, cv::Ma
     cv::Mat T = (cv::Mat_<double>(3, 1) << T_[0], T_[1], T_[2]);
     std::cout << " Camera Matrix L: \n" << cameraMatrix_left << std::endl << std::endl;
     std::cout << " Camera Matrix R: \n" << cameraMatrix_right << std::endl << std::endl;
+    std::cout << " Distcoeffs Matrix L: \n" << distCoeffs_left << std::endl << std::endl;
+    std::cout << " Distcoeffs Matrix R: \n" << distCoeffs_right << std::endl << std::endl;
+
+    std::cout << " R: \n" << R << std::endl << std::endl;
+    std::cout << " T: \n" << T << std::endl << std::endl;
 
     cv::Mat R1, R2, P1, P2, Q;
     cv::stereoRectify(cameraMatrix_left, distCoeffs_left, cameraMatrix_right, distCoeffs_right, image_size, R, T,

@@ -9,7 +9,8 @@ def generate_launch_description():
             name='anyrosDataCollector',
             output='screen',
             parameters=[
-                {'fps': 15}
+                {'fps': 30},
+                {'imu_fps': 200}
             ]
         )
     ])
