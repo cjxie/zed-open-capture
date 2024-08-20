@@ -22,7 +22,7 @@ std::mutex imuMutex;
 bool sensThreadStop=false;
 bool imageThreadStop=false;
 
-bool show = false;
+
 
 
 class imuImagePublisher : public rclcpp::Node
@@ -34,6 +34,9 @@ public:
         int value = this->get_parameter("fps").as_int();
         this->declare_parameter("imu_fps", 400);
         imu_fps = this->get_parameter("imu_fps").as_int();
+        this->declare_parameter("show", false);
+        show = this->get_parameter("show").as_bool();
+
     
         if(imu_fps <=100)
         {
@@ -101,7 +104,7 @@ public:
         static int counter = 0;
         while(!sensThreadStop)
         {
-            const sl_oc::sensors::data::Imu imu_data = sens_.getLastIMUData(100000);
+            const sl_oc::sensors::data::Imu imu_data = sens_.getLastIMUData(2000);
             uint64_t ts =  imu_data.timestamp;
             rclcpp::Time ts_imu(ts);
             if (counter==0)
@@ -109,7 +112,7 @@ public:
                 if(ts < last_ts_imu)
                 {
                     last_ts_imu = ts;
-                    RCLCPP_INFO(this->get_logger(), "Invalid imu timestamp");
+                    RCLCPP_WARN(this->get_logger(), "Invalid imu timestamp");
                     continue;
                 }
             
@@ -153,7 +156,7 @@ public:
         int h,w;
         cap_.getFrameSize(w, h);
 
-        while(1 && frame.data!=nullptr)
+        while(rclcpp::ok())
         {
             frame = cap_.getLastFrame(1);
             // RCLCPP_INFO(this->get_logger(), "imageThread1");
@@ -217,6 +220,7 @@ private:
     uint64_t last_ts_imu;
     int imu_fps;
     int imu_counter;
+    bool show = false;
 };
 
 
@@ -230,7 +234,7 @@ int main(int argc, char** argv)
     params.fps = sl_oc::video::FPS::FPS_30;
     params.verbose = sl_oc::VERBOSITY::INFO;
 
-    show = true;
+    
 
     // usea seperate thread for imu data
     auto node = std::make_shared<imuImagePublisher>(params);
