@@ -4277,6 +4277,12 @@ bool initCalibration(std::string calibration_file, cv::Size2i image_size, cv::Ma
     cv::stereoRectify(cameraMatrix_left, distCoeffs_left, cameraMatrix_right, distCoeffs_right, image_size, R, T,
             R1, R2, P1, P2, Q, cv::CALIB_ZERO_DISPARITY, 0, image_size);
 
+    std::cout << " R1: \n" << R1 << std::endl << std::endl;
+    std::cout << " R2: \n" << R2 << std::endl << std::endl;
+    std::cout << " P1: \n" << P1 << std::endl << std::endl;
+    std::cout << " P2: \n" << P2 << std::endl << std::endl;
+
+
     //Precompute maps for cv::remap()
     initUndistortRectifyMap(cameraMatrix_left, distCoeffs_left, R1, P1, image_size, CV_32FC1, map_left_x, map_left_y);
     initUndistortRectifyMap(cameraMatrix_right, distCoeffs_right, R2, P2, image_size, CV_32FC1, map_right_x, map_right_y);

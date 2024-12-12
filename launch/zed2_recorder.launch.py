@@ -10,8 +10,8 @@ def generate_launch_description():
             output='screen',
             parameters=[
                 {'fps': 15},
-                {'imu_fps': 200},
-                {'show': False}
+                {'imu_fps': 400},
+                {'show': True}
             ]
         )
     ])

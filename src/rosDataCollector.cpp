@@ -101,30 +101,45 @@ public:
 
     void publishImuData()
     {
-        static int counter = 0;
+        int counter = 0;
+        int total_meas = 0;
+	uint64_t last_period = 0;
         while(!sensThreadStop)
         {
             const sl_oc::sensors::data::Imu imu_data = sens_.getLastIMUData(2000);
             uint64_t ts =  imu_data.timestamp;
-            rclcpp::Time ts_imu(ts);
+	    
             if (counter==0)
             {
-                if(ts < last_ts_imu)
-                {
-                    last_ts_imu = ts;
-                    RCLCPP_WARN(this->get_logger(), "Invalid imu timestamp");
-                    continue;
-                }
+            	if (total_meas > 0)
+            	{
+		        if(ts <= last_ts_imu)
+		        {
+		            if (ts < last_ts_imu)
+		            	RCLCPP_INFO(this->get_logger(), "Invalid imu timestamp %ld <= %.ld", ts, last_ts_imu);
+		            // RCLCPP_WARN(this->get_logger(), "Invalid imu timestamp %.4f <= %.4f", ts, last_ts_imu);
+		            last_ts_imu = ts;
+		            continue;
+		        }
+		}
             
                 // RCLCPP_INFO(this->get_logger(), "imu ts: %f", ts / 1e9);
-                double fps = 1e9 / static_cast<double>(ts - last_ts_imu);
-                RCLCPP_INFO(this->get_logger(), "imu fps: %f", fps);
-
+                // double fps = 1e9 / static_cast<double>(ts - last_ts_imu);
+		//RCLCPP_INFO(this->get_logger(), "imu fps: %f", fps);
+		if (total_meas == 0)
+			last_period = ts;
+		total_meas++;
+		if (total_meas % 10000 == 0)
+		{
+			double fps = 1e9 * 10000 / (double) (ts - last_period);
+			RCLCPP_DEBUG(get_logger(), "imu fps over last 10000 measurements is %f", fps);
+			last_period = ts;
+		}
 
                 last_ts_imu = ts;
                 counter++;
                 auto imu_msg = std::make_unique<sensor_msgs::msg::Imu>();
-                imu_msg->header.stamp = ts_imu;
+                imu_msg->header.stamp = rclcpp::Time(ts);;
                 // imu_msg->orientation.x = imu_data.
                 
                 imu_msg->angular_velocity.x = imu_data.gX * DEG2RAD;
@@ -174,7 +189,7 @@ public:
                     cv::Mat right = frameBGR(cv::Rect(int(w/2),0,int(w/2), h));
                     
                     frame_fps = 1e9/static_cast<double>(frame.timestamp - last_ts);
-                    RCLCPP_INFO(this->get_logger(), "fps : %f", frame_fps);
+                    // RCLCPP_INFO(this->get_logger(), "fps : %f", frame_fps);
                     // RCLCPP_INFO(this->get_logger(), "TimeStamp: %f", static_cast<double> (frame.timestamp) / 1e9);
                     
                     
